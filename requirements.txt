@@ -7,3 +7,4 @@ PyJWT==2.10.1
 groq==0.18.0
 celery==5.5.3
 pillow==10.4.0
+whitenoise==6.11.0
