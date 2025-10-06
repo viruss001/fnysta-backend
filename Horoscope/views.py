@@ -2,6 +2,7 @@
 
 from groq import Groq
 import json
+import re
 from datetime import datetime
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -17,15 +18,30 @@ logger = logging.getLogger(__name__)
 
 
 def extract_json_from_text(text):
+    """
+    Extracts and cleans JSON-like text from model responses.
+    Handles cases where the text includes trailing commas or extra characters.
+    """
     try:
+        # Extract JSON substring
         start = text.index("{")
         end = text.rindex("}") + 1
         json_str = text[start:end]
-        # remove control characters
+
+        # Remove control/non-printable characters
         json_str = "".join(ch for ch in json_str if ord(ch) >= 32)
+
+        # 🩹 Fix trailing commas before closing braces/brackets
+        json_str = re.sub(r',\s*([}\]])', r'\1', json_str)
+
+        # 🧹 Optional cleanup of excessive whitespace
+        json_str = re.sub(r'\s+', ' ', json_str).strip()
+
         return json.loads(json_str)
-    except Exception as e:
+    except json.JSONDecodeError as e:
         raise ValueError(f"Cannot parse JSON: {e}")
+    except Exception as e:
+        raise ValueError(f"Unexpected error while extracting JSON: {e}")
 
 @api_view(["POST"])
 def astroapp_today_api(request):
