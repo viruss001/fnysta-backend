@@ -9,8 +9,12 @@ from utils.otp import generate_otp
 from .task import send_otp_email_task
 from .serializers import SendOtpSerializer, VerifyOtpSerializer
 from profiles.models import Profiles,UserLoggedIn,Coins
+from rest_framework.permissions import AllowAny
+
 
 class SendOtpView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
     def post(self, request):
         serializer = SendOtpSerializer(data=request.data)
         if serializer.is_valid():
@@ -31,6 +35,8 @@ class SendOtpView(APIView):
 
 
 class VerifyOtpView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
     def post(self, request):
         serializer = VerifyOtpSerializer(data=request.data)
         if serializer.is_valid():
@@ -58,11 +64,11 @@ class VerifyOtpView(APIView):
             profile, created = Profiles.objects.get_or_create(
                 Email=email,
                 defaults={
-                    "Username": email.split("@")[0],  # fallback username
+                    "Username": "",  # fallback username
                     "phone_number": "",
-                    "gender": "O",  # default "Other"
-                    "dob": "2000-01-01",  # default date
-                    "name": email.split("@")[0],  # fallback name
+                    "gender": "",  # default "Other"
+                    "dob": "",  # default date
+                    "name": "",  # fallback name
                 }
             )
 

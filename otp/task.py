@@ -1,10 +1,12 @@
 from celery import shared_task
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
+from datetime import datetime
 
 
-
-
+# ==============================
+# OTP Email HTML Template
+# ==============================
 OTP_EMAIL_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -110,17 +112,26 @@ OTP_EMAIL_TEMPLATE = """
 """
 
 
-
-
+# ==============================
+# Celery Task to Send OTP Email
+# ==============================
 @shared_task(bind=True, name="send_otp_email_task")
 def send_otp_email_task(self, to_email, otp):
+    """
+    Celery task to send a styled HTML OTP email.
+    """
     subject = "Your OTP Code"
-    html_content = OTP_EMAIL_TEMPLATE.format(otp=otp)
     from_email = settings.DEFAULT_FROM_EMAIL
 
-    # Use EmailMultiAlternatives to send HTML
+    # Fill placeholders (otp and year)
+    html_content = OTP_EMAIL_TEMPLATE.format(
+        otp=otp,
+        year=datetime.now().year
+    )
+
+    # Create and send email
     mail = EmailMultiAlternatives(subject, "", from_email, [to_email])
     mail.attach_alternative(html_content, "text/html")
     mail.send(fail_silently=False)
 
-    return f"OTP email sent to {to_email}"
+    return f"✅ OTP email sent to {to_email}"
