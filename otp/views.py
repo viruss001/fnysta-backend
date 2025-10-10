@@ -6,7 +6,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Otp
 from utils.otp import generate_otp
-from .task import send_otp_email_task
+from .task import send_otp_email_task,send_otp_email_task2
 from .serializers import SendOtpSerializer, VerifyOtpSerializer
 from profiles.models import Profiles,UserLoggedIn,Coins
 from rest_framework.permissions import AllowAny
@@ -105,3 +105,23 @@ def LogoutUser(request):
 
 
 
+class SendOtpView2(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    def post(self, request):
+        serializer = SendOtpSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            otp_code = generate_otp()
+
+            # Create or update OTP in DB
+            otp_entry, _ = Otp.objects.update_or_create(
+                email=email,
+                defaults={"otp": otp_code, "exp": timezone.now() + timedelta(minutes=20)}
+            )
+
+            # Send OTP synchronously
+            send_otp_email_task2(email, otp_code)
+
+            return Response({"message": f"OTP sent to {email}"})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

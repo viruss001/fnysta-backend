@@ -135,3 +135,24 @@ def send_otp_email_task(self, to_email, otp):
     mail.send(fail_silently=False)
 
     return f"✅ OTP email sent to {to_email}"
+
+
+def send_otp_email_task2( to_email, otp):
+    """
+    Celery task to send a styled HTML OTP email.
+    """
+    subject = "Your OTP Code"
+    from_email = settings.DEFAULT_FROM_EMAIL
+
+    # Fill placeholders (otp and year)
+    html_content = OTP_EMAIL_TEMPLATE.format(
+        otp=otp,
+        year=datetime.now().year
+    )
+
+    # Create and send email
+    mail = EmailMultiAlternatives(subject, "", from_email, [to_email])
+    mail.attach_alternative(html_content, "text/html")
+    mail.send(fail_silently=False)
+
+    return f"✅ OTP email sent to {to_email}"
